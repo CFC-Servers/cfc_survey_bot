@@ -16,7 +16,7 @@ def make_count_line(count, total):
     if total == 0:
         percent = 0
     else:
-        percent = math.floor(count / total)
+        percent = math.floor(count / total) * 10
 
     for i in range(10):
         x = i + 1
@@ -29,7 +29,7 @@ def make_count_line(count, total):
         if x < 10:
             out = out + " "
 
-    plural = "votes" if count > 1 else "vote"
+    plural = "votes" if count != 1 else "vote"
     out = out + f" `{count} {plural}`"
 
     return out
@@ -53,17 +53,23 @@ def make_option_block(option, emoji, count, total):
 
 
 def make_survey_body(survey):
-    options = storage.get_options_for_survey(survey["survey_id"])
+    survey_id = survey["survey_id"]
+    options = storage.get_options_for_survey(survey_id)
     out = []
 
     letters = ["🇦", "🇧", "🇨", "🇩"]
+    counts = storage.get_option_counts_for_survey(survey_id)
+    total = counts["total"]
+    logger.info(counts)
 
     for option in options:
         option_text = option["option_text"]
         option_idx = option["option_idx"]
         option_emoji = option["option_emoji"] or letters[option_idx]
 
-        out.append(make_option_block(option_text, option_emoji, 0, 0))
+        count = counts.get(option_idx, 0)
+
+        out.append(make_option_block(option_text, option_emoji, count, total))
 
     out.append(make_expires_line(survey))
 
@@ -101,10 +107,13 @@ async def send_survey(ctx, survey, message_url=None):
     buttons = make_buttons(survey)
 
     if message_url:
+        # ctx is the bot here because I'm retarded and impatient
         msg = interactions.api.models.message.Message
-        message = msg.get_from_url(message_url)
-        logger.info(message)
+        message = await msg.get_from_url(message_url, ctx._http)
         await message.edit("", embeds=[embed], components=[buttons])
     else:
         result = await ctx.send("", embeds=[embed], components=[buttons])
+        logger.info(result.id)
+        logger.info(result.url)
         storage.update_survey_message_info(survey_id, result.id, result.url)
+

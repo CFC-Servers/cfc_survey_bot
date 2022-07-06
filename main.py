@@ -80,14 +80,17 @@ async def modal_receiver(ctx, question, option1=None, option2=None, option3=None
 
 async def receive_vote(ctx, idx):
     user_id = ctx.user.id
-    message_id = ctx.message.id
+    logger.info(str(ctx.message))
+    logger.info(str(ctx.message.id))
+    message_id = int(ctx.message.id)
 
     survey = storage.get_survey_by_message_id(message_id)
     survey_id = survey["survey_id"]
-    message_url = survey["messsage_url"]
+    message_url = survey["message_url"]
 
     storage.cast_vote(user_id, survey_id, idx)
-    await send_survey(None, survey, message_url)
+    await send_survey(bot, survey, message_url)
+    await ctx.send()
 
 
 @bot.component("receive_vote_0")

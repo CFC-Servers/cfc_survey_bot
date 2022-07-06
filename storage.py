@@ -1,4 +1,5 @@
 import sqlite3
+
 from time import time
 from loguru import logger
 
@@ -9,7 +10,7 @@ cur.execute('''
     CREATE TABLE IF NOT EXISTS surveys (
         survey_id   INTEGER PRIMARY KEY,
         message_id  INTEGER NOT NULL,
-        message_url TEXT NOT NULL,
+        message_url TEXT    NOT NULL,
         posted      REAL    NOT NULL,
         expires     REAL    NOT NULL,
         author      TEXT    NOT NULL,
@@ -123,7 +124,7 @@ def cast_vote(voter_id, survey_id, option_idx):
             (vote_id, voter, survey_id, option_idx)
         VALUES
             (?, ?, ?, ?)
-    ''', (None, str(voter_id), str(survey_id), str(option_idx)))
+    ''', [None, str(voter_id), str(survey_id), str(option_idx)])
 
     con.commit()
 
@@ -148,51 +149,49 @@ def _format_responses_to_survey(responses):
 
 
 def get_survey_by_message_id(message_id):
+    logger.info(message_id)
+    logger.info(str(message_id))
+    logger.info(type(message_id))
     result = cur.execute('''
         SELECT * FROM
             surveys
         WHERE
-            message_id=?
-    ''', str(message_id)).fetchall()
+            message_id = ?
+    ''', [str(message_id)]).fetchall()
 
     return _format_response_to_survey(result[0])
 
 
 def get_survey_by_id(survey_id):
+    logger.info(survey_id)
+    logger.info(str(survey_id))
     logger.info(type(survey_id))
     result = cur.execute('''
         SELECT * FROM
             surveys
         WHERE
-            survey_id=?
-    ''', str(survey_id)).fetchall()
+            survey_id = ?
+    ''', [str(survey_id)]).fetchall()
 
     return _format_response_to_survey(result[0])
 
 
 def get_option_counts_for_survey(survey_id):
     result = cur.execute('''
-        SELECT *
+        SELECT
+            option_idx, COUNT(*)
         FROM
-            surveys s
-        INNER JOIN (
-            SELECT
-                survey_id, v.option_idx, count(v.vote_id)
-            FROM
-                votes v
-            GROUP BY
-                survey_id, option_idx
-        ) AS
-            counts
-          ON
-            s.survey_id = counts.survey_id
+            votes
         WHERE
-            s.survey_id = ?
-    ''', str(survey_id)).fetchall()
+            survey_id = ?
+        GROUP BY
+            option_idx
+    ''', [str(survey_id)]).fetchall()
 
-    logger.info(result)
+    out = dict(result)
+    out["total"] = sum(out.values())
 
-    return result
+    return out
 
 
 def get_options_for_survey(survey_id):
@@ -202,8 +201,8 @@ def get_options_for_survey(survey_id):
         FROM
             options
         WHERE
-            survey_id=?
-    ''', str(survey_id)).fetchall()
+            survey_id = ?
+    ''', [str(survey_id)]).fetchall()
 
     logger.info(result)
     fields = ["option_idx", "option_text", "option_emoji", "option_color"]
@@ -215,10 +214,10 @@ def update_survey_message_info(survey_id, message_id, message_url):
         UPDATE
             surveys
         SET
-            message_id=?,
-            message_url=?
+            message_id = ?,
+            message_url = ?
         WHERE
-            survey_id=?
-    ''', (str(survey_id), message_url, str(message_id)))
+            survey_id = ?
+    ''', [str(message_id), message_url, str(survey_id)])
 
     con.commit()
