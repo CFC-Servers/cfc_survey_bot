@@ -11,7 +11,7 @@ async def custom_modal_receiver(ctx, question, option1=None, option2=None, optio
     author = ctx.user.id
     vote_limit = 1
 
-    survey_id = storage.create_survey(0, expires, author, question, vote_limit, options)
+    survey_id = storage.create_survey(0, "", expires, author, question, vote_limit, options)
     survey = storage.get_survey_by_id(survey_id)
 
     await send_survey(ctx, survey)

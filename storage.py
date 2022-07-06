@@ -7,13 +7,14 @@ cur = con.cursor()
 
 cur.execute('''
     CREATE TABLE IF NOT EXISTS surveys (
-        survey_id  INTEGER PRIMARY KEY,
-        message_id INTEGER NOT NULL,
-        posted     REAL    NOT NULL,
-        expires    REAL    NOT NULL,
-        author     TEXT    NOT NULL,
-        question   TEXT    NOT NULL,
-        vote_limit INTEGER DEFAULT 1 NOT NULL
+        survey_id   INTEGER PRIMARY KEY,
+        message_id  INTEGER NOT NULL,
+        message_url TEXT NOT NULL,
+        posted      REAL    NOT NULL,
+        expires     REAL    NOT NULL,
+        author      TEXT    NOT NULL,
+        question    TEXT    NOT NULL,
+        vote_limit  INTEGER DEFAULT 1 NOT NULL
     )
 ''')
 
@@ -23,7 +24,7 @@ cur.execute('''
         survey_id    INTEGER NOT NULL,
         option_idx   INTEGER NOT NULL,
         option_text  TEXT NOT NULL,
-        option_color INTEGER DEFAULT 1 NOT NULL,
+        option_color INTEGER DEFAULT 1,
         option_emoji TEXT,
         FOREIGN KEY (survey_id)
            REFERENCES surveys (survey_id)
@@ -51,16 +52,16 @@ cur.execute('''
 con.commit()
 
 
-def create_survey(message_id, expires, author, question, vote_limit, options):
+def create_survey(message_id, message_url, expires, author, question, vote_limit, options):
     posted = time()
 
     cur.execute('''
         INSERT INTO
             surveys
-            (survey_id, message_id, posted, expires, author, question, vote_limit)
+            (survey_id, message_id, message_url, posted, expires, author, question, vote_limit)
         VALUES
-          (?, ?, ?, ?, ?, ?, ?)
-    ''', (None, str(message_id), posted, expires, str(author), question, vote_limit))
+          (?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (None, str(message_id), message_url, posted, expires, str(author), question, vote_limit))
 
     survey_id = cur.lastrowid
 
@@ -91,19 +92,38 @@ def remove_vote(voter_id, survey_id, option_idx):
             survey_id = ?
         AND
             option_idx = ?
-    ''', (voter_id, survey_id, option_idx))
+    ''', (str(voter_id), str(survey_id), str(option_idx)))
+
+    con.commit()
+
+
+def remove_all_votes(voter_id, survey_id):
+    cur.execute('''
+        DELETE FROM
+            votes
+        WHERE
+            voter = ?
+        AND
+            survey_id = ?
+    ''', (str(voter_id), str(survey_id)))
 
     con.commit()
 
 
 def cast_vote(voter_id, survey_id, option_idx):
+    # TODO: Only do this step if the max votes is 1
+    # Otherwise just don't register the vote change unless
+    # they un-click an already-clicked option
+
+    remove_all_votes(voter_id, survey_id)
+
     cur.execute('''
         INSERT INTO
             votes
             (vote_id, voter, survey_id, option_idx)
         VALUES
             (?, ?, ?, ?)
-    ''', (None, voter_id, survey_id, option_idx))
+    ''', (None, str(voter_id), str(survey_id), str(option_idx)))
 
     con.commit()
 
@@ -112,6 +132,7 @@ def _format_response_to_survey(response):
     fields = [
         "survey_id",
         "message_id",
+        "message_url",
         "posted",
         "expires",
         "author",
@@ -132,7 +153,7 @@ def get_survey_by_message_id(message_id):
             surveys
         WHERE
             message_id=?
-    ''', message_id).fetchall()
+    ''', str(message_id)).fetchall()
 
     return _format_response_to_survey(result[0])
 
@@ -186,4 +207,18 @@ def get_options_for_survey(survey_id):
 
     logger.info(result)
     fields = ["option_idx", "option_text", "option_emoji", "option_color"]
-    return dict(zip(fields, result[0]))
+    return [dict(zip(fields, r)) for r in result]
+
+
+def update_survey_message_info(survey_id, message_id, message_url):
+    cur.execute('''
+        UPDATE
+            surveys
+        SET
+            message_id=?,
+            message_url=?
+        WHERE
+            survey_id=?
+    ''', (str(survey_id), message_url, str(message_id)))
+
+    con.commit()
