@@ -10,6 +10,12 @@ crown = "👑"
 chart = "📊"
 lock = "🔒"
 letters = ["🇦", "🇧", "🇨", "🇩"]
+letters_names = [
+    "regional_indicator_a"
+    "regional_indicator_b"
+    "regional_indicator_c"
+    "regional_indicator_d"
+]
 active_color = 0x00a5d7
 expired_color = 0xf38c01
 
@@ -90,7 +96,10 @@ def make_survey_body(survey):
 
     for option in options:
         option_idx = option.idx
-        option_emoji = option.text_emoji or letters[option_idx]
+        option_emoji = option.text_emoji_name
+
+        if option_emoji is None:
+            option_emoji = letters[option_idx]
 
         count = counts[option_idx]
 
@@ -118,7 +127,10 @@ def make_buttons(survey):
 
         buttons.append(interactions.Button(
             style=option.color,
-            emoji=option.button_emoji or letters[option_idx],
+            emoji=interactions.Emoji(
+                name=option.button_emoji_name or letters_names[option_idx],
+                id=option.button_emoji_id
+            ),
             label=option.button_text,
             custom_id=f"receive_vote_{option_idx}"
         ))

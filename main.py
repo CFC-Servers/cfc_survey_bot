@@ -4,6 +4,7 @@ import os
 from loguru import logger
 from custom_survey import custom_modal_receiver, make_custom_modal
 from yes_no import yes_no_command_receiver
+from agree_scale import agree_scale_command_receiver
 from send_survey import send_survey
 
 
@@ -70,7 +71,7 @@ async def survey(ctx, sub_command, question=None, option_count=None):
     elif sub_command == "yes_no":
         await yes_no_command_receiver(ctx, question=question)
     elif sub_command == "agree_scale":
-        await ctx.send("Not implemented")
+        await agree_scale_command_receiver(ctx, question=question)
 
 
 @bot.modal("custom-survey-modal")

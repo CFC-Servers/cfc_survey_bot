@@ -33,8 +33,9 @@ class Option(BaseModel):
     idx = IntegerField(null=False)
     text = TextField(null=False)
     color = IntegerField(default=1)
-    text_emoji = TextField(null=True)
-    button_emoji = TextField(null=True)
+    text_emoji_name = TextField(null=True)
+    button_emoji_name = TextField(null=True)
+    button_emoji_id = TextField(null=True)
     button_text = TextField(null=True)
 
 

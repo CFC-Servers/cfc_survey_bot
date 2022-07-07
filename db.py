@@ -30,9 +30,10 @@ def create_survey(
                 survey=survey,
                 idx=i,
                 text=option.text,
-                text_emoji=option.text_emoji,
+                text_emoji_name=option.text_emoji_name,
                 button_text=option.button_text,
-                button_emoji=option.button_emoji,
+                button_emoji_name=option.button_emoji_name,
+                button_emoji_id=option.button_emoji_id,
                 color=option.color
                 )
 

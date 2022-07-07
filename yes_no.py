@@ -13,16 +13,14 @@ async def yes_no_command_receiver(ctx, question: str) -> None:
     options = [
         OptionStruct(
             text="Yes",
-            button_text="Yes",
-            text_emoji="",
-            button_emoji="👍",
+            text_emoji_name="",
+            button_emoji_name="👍",
             color=ButtonStyle.SUCCESS
         ),
         OptionStruct(
             text="No",
-            button_text="No",
-            text_emoji="",
-            button_emoji="👎",
+            text_emoji_name="",
+            button_emoji_name="👎",
             color=ButtonStyle.DANGER
         )
     ]

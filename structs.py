@@ -6,13 +6,18 @@ class OptionStruct:
     def __init__(
             self,
             text: str,
-            text_emoji: Optional[str] = None,
             button_text: Optional[str] = "",
-            button_emoji: Optional[str] = None,
+
+            text_emoji_name: Optional[str] = None,
+
+            button_emoji_name: Optional[str] = None,
+            button_emoji_id: Optional[str] = None,
+
             color: Optional[int] = ButtonStyle.PRIMARY):
 
         self.text = text
-        self.text_emoji = text_emoji
+        self.text_emoji_name = text_emoji_name
         self.button_text = button_text
-        self.button_emoji = button_emoji
+        self.button_emoji_name = button_emoji_name
+        self.button_emoji_id = button_emoji_id
         self.color = color
