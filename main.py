@@ -1,13 +1,13 @@
+import db
 import interactions
+import os
 from loguru import logger
 from custom_survey import custom_modal_receiver, make_custom_modal
-import os
-import storage
 from send_survey import send_survey
 
 
 bot = interactions.Client(
-    token=os.getenv("DISCORD_BOT_TOKEN")
+    token=os.getenv("DISCORD_BOT_TOKEN", "")
 )
 
 
@@ -79,16 +79,15 @@ async def modal_receiver(ctx, question, option1=None, option2=None, option3=None
 
 
 async def receive_vote(ctx, idx):
-    user_id = ctx.user.id
-    logger.info(str(ctx.message))
-    logger.info(str(ctx.message.id))
-    message_id = int(ctx.message.id)
+    user_id = str(ctx.user.id)
+    message_id = str(ctx.message.id)
+    logger.info(message_id)
 
-    survey = storage.get_survey_by_message_id(message_id)
-    survey_id = survey["survey_id"]
-    message_url = survey["message_url"]
+    survey = db.get_survey_by_message_id(message_id)
+    message_url = survey.message_url
+    logger.info(message_url)
 
-    storage.cast_vote(user_id, survey_id, idx)
+    db.cast_vote(user_id, survey, idx)
     await send_survey(bot, survey, message_url)
     await ctx.send()
 

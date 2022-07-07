@@ -1,18 +1,31 @@
 import interactions
-from loguru import logger
 from send_survey import send_survey
 from time import time
-import storage
+import db
 
 
-async def custom_modal_receiver(ctx, question, option1=None, option2=None, option3=None, option4=None):
+async def custom_modal_receiver(
+        ctx,
+        question,
+        option1=None,
+        option2=None,
+        option3=None,
+        option4=None):
+
     options = [o for o in [option1, option2, option3, option4] if o]
-    expires = time() + 100
-    author = ctx.user.id
+    expires = round(time() + 100)
+    author = str(ctx.user.id)
     vote_limit = 1
 
-    survey_id = storage.create_survey(0, "", expires, author, question, vote_limit, options)
-    survey = storage.get_survey_by_id(survey_id)
+    survey = db.create_survey(
+        "0",
+        "",
+        author,
+        question,
+        options,
+        vote_limit,
+        expires
+    )
 
     await send_survey(ctx, survey)
 

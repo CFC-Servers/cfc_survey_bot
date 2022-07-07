@@ -1,14 +1,34 @@
 import interactions
-import storage
+import db
 import math
 from loguru import logger
-from time import time
 
 white_box = "◽"
 black_box = "◾"
+orange_diamond = "🔸"
+crown = "👑"
+letters = ["🇦", "🇧", "🇨", "🇩"]
+active_color = 0x00a5d7
+expired_color = 0xf38c01
+
+message_cache = {}
+msg = interactions.api.models.message.Message
 
 
-def make_count_line(count, total):
+async def get_discord_message(url: str, http):
+    cached = message_cache.get(url, None)
+
+    if cached:
+        logger.info(f"Returning cached message for: {url}")
+        return cached
+
+    message = await msg.get_from_url(url, http)
+    message_cache[url] = message
+
+    return message
+
+
+def make_count_line(count, total, is_winner=False):
     out = ""
 
     percent = None
@@ -16,13 +36,13 @@ def make_count_line(count, total):
     if total == 0:
         percent = 0
     else:
-        percent = math.floor(count / total) * 10
+        percent = math.floor((count / total) * 10)
 
     for i in range(10):
         x = i + 1
 
         if x <= percent:
-            out = out + white_box
+            out = out + (orange_diamond if is_winner else white_box)
         else:
             out = out + black_box
 
@@ -32,44 +52,54 @@ def make_count_line(count, total):
     plural = "votes" if count != 1 else "vote"
     out = out + f" `{count} {plural}`"
 
+    if is_winner:
+        out = out + f" {crown}"
+
     return out
 
 
 def make_expires_line(survey):
-    expires = round(survey["expires"])
-    now = time()
+    expires = round(survey.expires.timestamp())
+    expired = survey.is_expired()
 
-    word = "Expires" if expires > now else "Expired"
+    word = "Expired" if expired else "Expires"
 
-    return f"{word}: <t:{expires}:R>"
+    return f"**{word}**: <t:{expires}:R>"
 
 
-def make_option_block(option, emoji, count, total):
+def make_option_block(option, emoji, count, total, is_expired, ranking):
     return "\n".join([
         f"> {emoji} **{option}**",
-        make_count_line(count, total),
+        make_count_line(count, total, is_expired and ranking == 0),
         ""
     ])
 
 
 def make_survey_body(survey):
-    survey_id = survey["survey_id"]
-    options = storage.get_options_for_survey(survey_id)
+    options = survey.options
+    is_expired = survey.is_expired()
     out = []
 
-    letters = ["🇦", "🇧", "🇨", "🇩"]
-    counts = storage.get_option_counts_for_survey(survey_id)
-    total = counts["total"]
-    logger.info(counts)
+    counts, total = db.get_option_counts_for_survey(survey)
+
+    # 0 = first
+    rankings = dict(zip(sorted(counts, key=counts.get, reverse=True), range(len(options))))
 
     for option in options:
-        option_text = option["option_text"]
-        option_idx = option["option_idx"]
-        option_emoji = option["option_emoji"] or letters[option_idx]
+        option_idx = option.idx
+        option_emoji = option.emoji or letters[option_idx]
 
-        count = counts.get(option_idx, 0)
+        count = counts[option_idx]
 
-        out.append(make_option_block(option_text, option_emoji, count, total))
+        option_block = make_option_block(
+            option.text,
+            option_emoji,
+            count,
+            total,
+            is_expired,
+            rankings[option_idx]
+        )
+        out.append(option_block)
 
     out.append(make_expires_line(survey))
 
@@ -77,17 +107,15 @@ def make_survey_body(survey):
 
 
 def make_buttons(survey):
-    options = storage.get_options_for_survey(survey["survey_id"])
+    options = survey.options
     buttons = []
 
-    letters = ["🇦", "🇧", "🇨", "🇩"]
-
     for option in options:
-        option_idx = option["option_idx"]
+        option_idx = option.idx
 
         buttons.append(interactions.Button(
-            style=option.get("option_color", 1) or 1,
-            label=option["option_emoji"] or letters[option_idx],
+            style=option.color,
+            label=option.emoji or letters[option_idx],
             custom_id=f"receive_vote_{option_idx}"
         ))
 
@@ -95,12 +123,15 @@ def make_buttons(survey):
 
 
 async def send_survey(ctx, survey, message_url=None):
-    question = survey["question"]
-    survey_id = survey["survey_id"]
+    question = survey.question
+    is_expired = survey.is_expired()
+
+    title_suffix = "🔒" if is_expired else ""
+    color = expired_color if is_expired else active_color
 
     embed = interactions.api.models.message.Embed(
-        title=f"**📊 {question}**",
-        color=0x00a5d7,
+        title=f"**📊 {question}** {title_suffix}",
+        color=color,
         description=make_survey_body(survey)
     )
 
@@ -108,12 +139,14 @@ async def send_survey(ctx, survey, message_url=None):
 
     if message_url:
         # ctx is the bot here because I'm retarded and impatient
-        msg = interactions.api.models.message.Message
-        message = await msg.get_from_url(message_url, ctx._http)
+        message = await get_discord_message(message_url, ctx._http)
         await message.edit("", embeds=[embed], components=[buttons])
     else:
-        result = await ctx.send("", embeds=[embed], components=[buttons])
-        logger.info(result.id)
-        logger.info(result.url)
-        storage.update_survey_message_info(survey_id, result.id, result.url)
+        message = await ctx.send("", embeds=[embed], components=[buttons])
 
+        message_url = message.url
+        message_id = str(message.id)
+
+        message_cache[message_url] = message
+
+        db.update_survey_message_info(survey, message_id, message_url)
