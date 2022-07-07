@@ -3,6 +3,7 @@ import interactions
 import os
 from loguru import logger
 from custom_survey import custom_modal_receiver, make_custom_modal
+from yes_no import yes_no_command_receiver
 from send_survey import send_survey
 
 
@@ -23,7 +24,7 @@ bot = interactions.Client(
             options=[
                 interactions.Option(
                     name="option_count",
-                    description="How many options your survey will have",
+                    description="How many options your Survey will have",
                     type=interactions.OptionType.INTEGER,
                     required=True,
                     min_value=1,
@@ -47,7 +48,7 @@ bot = interactions.Client(
             ]
         ),
         interactions.Option(
-            name="agree-scale",
+            name="agree_scale",
             description="A 1-5 opinion Survey",
             type=interactions.OptionType.SUB_COMMAND,
             options=[
@@ -67,7 +68,7 @@ async def survey(ctx, sub_command, question=None, option_count=None):
     if sub_command == "custom":
         await ctx.popup(make_custom_modal(option_count))
     elif sub_command == "yes_no":
-        await ctx.send("Not implemented")
+        await yes_no_command_receiver(ctx, question=question)
     elif sub_command == "agree_scale":
         await ctx.send("Not implemented")
 
@@ -81,11 +82,11 @@ async def modal_receiver(ctx, question, option1=None, option2=None, option3=None
 async def receive_vote(ctx, idx):
     user_id = str(ctx.user.id)
     message_id = str(ctx.message.id)
-    logger.info(message_id)
 
     survey = db.get_survey_by_message_id(message_id)
     message_url = survey.message_url
-    logger.info(message_url)
+    if not message_url:
+        return
 
     db.cast_vote(user_id, survey, idx)
     await send_survey(bot, survey, message_url)

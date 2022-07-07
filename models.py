@@ -1,7 +1,8 @@
 import datetime
+from loguru import logger
 from peewee import Check
 from peewee import SqliteDatabase, Model
-from peewee import IntegerField, TextField, TimestampField, ForeignKeyField
+from peewee import IntegerField, TextField, DateTimeField, ForeignKeyField
 
 db = SqliteDatabase("surveys.db")
 
@@ -14,8 +15,8 @@ class BaseModel(Model):
 class Survey(BaseModel):
     message_id = TextField()
     message_url = TextField()
-    posted = TimestampField(default=datetime.datetime.utcnow)
-    expires = TimestampField(default=-1)
+    posted = DateTimeField(default=datetime.datetime.utcnow)
+    expires = DateTimeField(default=-1)
     author = TextField(null=False)
     question = TextField(null=False)
     vote_limit = IntegerField(
@@ -23,6 +24,7 @@ class Survey(BaseModel):
     )
 
     def is_expired(self):
+        logger.info(f"self.expires: {self.expires}")
         return self.expires < datetime.datetime.utcnow()
 
 
@@ -31,7 +33,9 @@ class Option(BaseModel):
     idx = IntegerField(null=False)
     text = TextField(null=False)
     color = IntegerField(default=1)
-    emoji = TextField(null=True)
+    text_emoji = TextField(null=True)
+    button_emoji = TextField(null=True)
+    button_text = TextField(null=True)
 
 
 class Vote(BaseModel):

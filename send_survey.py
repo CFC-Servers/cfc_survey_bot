@@ -7,6 +7,8 @@ white_box = "◽"
 black_box = "◾"
 orange_diamond = "🔸"
 crown = "👑"
+chart = "📊"
+lock = "🔒"
 letters = ["🇦", "🇧", "🇨", "🇩"]
 active_color = 0x00a5d7
 expired_color = 0xf38c01
@@ -83,11 +85,12 @@ def make_survey_body(survey):
     counts, total = db.get_option_counts_for_survey(survey)
 
     # 0 = first
+    # FIXME: This doesn't handle ties
     rankings = dict(zip(sorted(counts, key=counts.get, reverse=True), range(len(options))))
 
     for option in options:
         option_idx = option.idx
-        option_emoji = option.emoji or letters[option_idx]
+        option_emoji = option.text_emoji or letters[option_idx]
 
         count = counts[option_idx]
 
@@ -115,7 +118,8 @@ def make_buttons(survey):
 
         buttons.append(interactions.Button(
             style=option.color,
-            label=option.emoji or letters[option_idx],
+            emoji=option.button_emoji or letters[option_idx],
+            label=option.button_text,
             custom_id=f"receive_vote_{option_idx}"
         ))
 
@@ -126,26 +130,31 @@ async def send_survey(ctx, survey, message_url=None):
     question = survey.question
     is_expired = survey.is_expired()
 
-    title_suffix = "🔒" if is_expired else ""
+    title_prefix = lock if is_expired else chart
     color = expired_color if is_expired else active_color
 
     embed = interactions.api.models.message.Embed(
-        title=f"**📊 {question}** {title_suffix}",
+        title=f"**{title_prefix} {question}**",
         color=color,
         description=make_survey_body(survey)
     )
 
-    buttons = make_buttons(survey)
+    components = []
+
+    if not is_expired:
+        components.append(make_buttons(survey))
 
     if message_url:
         # ctx is the bot here because I'm retarded and impatient
         message = await get_discord_message(message_url, ctx._http)
-        await message.edit("", embeds=[embed], components=[buttons])
+        await message.edit("", embeds=[embed], components=components)
     else:
-        message = await ctx.send("", embeds=[embed], components=[buttons])
+        message = await ctx.send("", embeds=[embed], components=components)
 
         message_url = message.url
         message_id = str(message.id)
+        logger.info(f"Created message id: {message_id}")
+        logger.info(f"Created message url: {message_url}")
 
         message_cache[message_url] = message
 

@@ -1,7 +1,9 @@
+import datetime
 from loguru import logger
 from typing import Optional
 from peewee import fn, JOIN
 from models import Survey, Option, Vote
+from structs import OptionStruct
 
 
 def create_survey(
@@ -9,9 +11,9 @@ def create_survey(
         message_url: str,
         author: str,
         question: str,
-        options: list[str],
+        options: list[OptionStruct],
         vote_limit: Optional[int] = None,
-        expires: Optional[int] = None
+        expires: Optional[datetime.datetime] = None
         ) -> Survey:
 
     survey = Survey.create(
@@ -27,14 +29,21 @@ def create_survey(
         Option.create(
                 survey=survey,
                 idx=i,
-                text=option
+                text=option.text,
+                text_emoji=option.text_emoji,
+                button_text=option.button_text,
+                button_emoji=option.button_emoji,
+                color=option.color
                 )
 
     return survey
 
 
 def get_option_by_index(survey: Survey, option_idx: int) -> Option:
-    return Option.select().where(Option.survey == survey, Option.idx == option_idx)
+    return Option.select().where(
+        Option.survey == survey,
+        Option.idx == option_idx
+    )
 
 
 def cast_vote(
@@ -58,8 +67,7 @@ def cast_vote(
 
     Vote.delete().where(
             Vote.voter == voter_id,
-            Vote.option_idx == option_idx,
-            Vote.survey == Survey
+            Vote.survey == survey
             ).execute()
 
     Vote.create(
@@ -71,7 +79,8 @@ def cast_vote(
 
 
 def get_survey_by_message_id(message_id: str) -> Survey:
-    return Survey.select().where(message_id == message_id).first()
+    logger.info(f"Retrieving message with id: {message_id}")
+    return Survey.select().where(Survey.message_id == message_id).first()
 
 
 def get_option_counts_for_survey(survey: Survey):

@@ -1,19 +1,23 @@
 import interactions
-from send_survey import send_survey
-from time import time
+import datetime
 import db
+from send_survey import send_survey
+from structs import OptionStruct
+from typing import Optional
 
 
 async def custom_modal_receiver(
         ctx,
-        question,
-        option1=None,
-        option2=None,
-        option3=None,
-        option4=None):
+        question: str,
+        option1: Optional[str] = None,
+        option2: Optional[str] = None,
+        option3: Optional[str] = None,
+        option4: Optional[str] = None):
 
     options = [o for o in [option1, option2, option3, option4] if o]
-    expires = round(time() + 100)
+    options = [OptionStruct(text=o) for o in options]
+
+    expires = datetime.datetime.utcnow() + datetime.timedelta(minutes=5)
     author = str(ctx.user.id)
     vote_limit = 1
 
