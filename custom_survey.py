@@ -1,40 +1,11 @@
 import interactions
-import datetime
 import db
-from send_survey import send_survey
 from structs import OptionStruct
 from typing import Optional
+from interactions.ext.persistence.parse import PersistentCustomID
 
 
-async def custom_modal_receiver(
-        ctx,
-        question: str,
-        option1: Optional[str] = None,
-        option2: Optional[str] = None,
-        option3: Optional[str] = None,
-        option4: Optional[str] = None):
-
-    options = [o for o in [option1, option2, option3, option4] if o]
-    options = [OptionStruct(text=o) for o in options]
-
-    expires = datetime.datetime.utcnow() + datetime.timedelta(minutes=5)
-    author = str(ctx.user.id)
-    vote_limit = 1
-
-    survey = db.create_survey(
-        "0",
-        "",
-        author,
-        question,
-        options,
-        vote_limit,
-        expires
-    )
-
-    await send_survey(ctx, survey)
-
-
-def make_custom_modal(option_count):
+def make_custom_modal(bot, option_count, expires):
     modal_components = [
         interactions.TextInput(
             style=interactions.TextStyleType.SHORT,
@@ -56,10 +27,41 @@ def make_custom_modal(option_count):
             max_length=25
         ))
 
+    modal_id = PersistentCustomID(bot, "custom_survey", expires)
     modal = interactions.Modal(
         title="Create a Survey",
-        custom_id="custom-survey-modal",
+        custom_id=str(modal_id),
         components=modal_components
     )
 
     return modal
+
+
+def setup(bot):
+    @bot.modal("custom_modal")
+    async def custom_modal_receiver(
+            ctx,
+            expires,
+            question: str,
+            option1: Optional[str] = None,
+            option2: Optional[str] = None,
+            option3: Optional[str] = None,
+            option4: Optional[str] = None):
+
+        options = [o for o in [option1, option2, option3, option4] if o]
+        options = [OptionStruct(text=o) for o in options]
+
+        author = str(ctx.user.id)
+        vote_limit = 1
+
+        survey = db.create_survey(
+            message_id="0",
+            message_url="",
+            author=author,
+            question=question,
+            options=options,
+            vote_limit=vote_limit,
+            expires=expires
+        )
+
+        await bot.send_survey(ctx, survey)

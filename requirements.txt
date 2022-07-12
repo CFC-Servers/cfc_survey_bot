@@ -1,3 +1,5 @@
 discord-py-interactions
+interactions-persistence
 loguru
 peewee
+dateparser

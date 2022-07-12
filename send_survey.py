@@ -2,6 +2,7 @@ import interactions
 import db
 import math
 from loguru import logger
+from interactions.ext.persistence.parse import PersistentCustomID
 
 white_box = "◽"
 black_box = "◾"
@@ -9,13 +10,7 @@ orange_diamond = "🔸"
 crown = "👑"
 chart = "📊"
 lock = "🔒"
-letters = ["🇦", "🇧", "🇨", "🇩"]
-letters_names = [
-    "regional_indicator_a"
-    "regional_indicator_b"
-    "regional_indicator_c"
-    "regional_indicator_d"
-]
+letters = ["🇦", "🇧", "🇨", "🇩", "🇪", "🇫", "🇬"]
 active_color = 0x00a5d7
 expired_color = 0xf38c01
 
@@ -68,9 +63,9 @@ def make_count_line(count, total, is_winner=False):
 
 def make_expires_line(survey):
     expires = round(survey.expires.timestamp())
-    expired = survey.is_expired()
+    active = survey.active
 
-    word = "Expired" if expired else "Expires"
+    word = "Expires" if active else "Expired"
 
     return f"**{word}**: <t:{expires}:R>"
 
@@ -85,7 +80,7 @@ def make_option_block(option, emoji, count, total, is_expired, ranking):
 
 def make_survey_body(survey):
     options = survey.options
-    is_expired = survey.is_expired()
+    is_expired = not survey.active
     out = []
 
     counts, total = db.get_option_counts_for_survey(survey)
@@ -118,32 +113,44 @@ def make_survey_body(survey):
     return "\n".join(out)
 
 
-def make_buttons(survey):
+def make_buttons(survey, bot):
     options = survey.options
     buttons = []
 
     for option in options:
         option_idx = option.idx
+        logger.info(f"Option idx {option_idx}")
+
+        emoji = None
+        if option.button_emoji_name:
+            emoji = interactions.Emoji(
+                name=option.button_emoji_name,
+                id=option.button_emoji_id
+            )
+        else:
+            emoji = interactions.Emoji(name=letters[option_idx])
 
         buttons.append(interactions.Button(
             style=option.color,
-            emoji=interactions.Emoji(
-                name=option.button_emoji_name or letters_names[option_idx],
-                id=option.button_emoji_id
-            ),
+            emoji=emoji,
             label=option.button_text,
-            custom_id=f"receive_vote_{option_idx}"
+            custom_id=str(PersistentCustomID(bot, "receive_vote", option_idx))
         ))
 
     return buttons
 
 
-async def send_survey(ctx, survey, message_url=None):
-    question = survey.question
-    is_expired = survey.is_expired()
+async def send_survey(bot, ctx, survey, message_url=None):
+    logger.info(f"bot: {str(bot)}")
+    logger.info(f"ctx: {str(ctx)}")
+    logger.info(f"survey: {str(survey)}")
+    logger.info(f"message_url: {message_url}")
 
-    title_prefix = lock if is_expired else chart
-    color = expired_color if is_expired else active_color
+    question = survey.question
+    is_active = not survey.is_expired()
+
+    title_prefix = chart if is_active else lock
+    color = active_color if is_active else expired_color
 
     embed = interactions.api.models.message.Embed(
         title=f"**{title_prefix} {question}**",
@@ -153,11 +160,13 @@ async def send_survey(ctx, survey, message_url=None):
 
     components = []
 
-    if not is_expired:
-        components.append(make_buttons(survey))
+    if is_active:
+        components.append(make_buttons(survey, bot))
 
     if message_url:
         # ctx is the bot here because I'm retarded and impatient
+        # if message_url is provided, this is an update
+        # if it's not, then this is an initial send
         message = await get_discord_message(message_url, ctx._http)
         await message.edit("", embeds=[embed], components=components)
     else:

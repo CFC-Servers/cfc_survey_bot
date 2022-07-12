@@ -1,3 +1,5 @@
+# Structs for passing data around
+
 from typing import Optional
 from interactions.client.enums import ButtonStyle
 

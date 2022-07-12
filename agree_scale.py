@@ -1,12 +1,9 @@
-import datetime
 import db
-from send_survey import send_survey
 from structs import OptionStruct
 from interactions.client.enums import ButtonStyle
 
 
-async def agree_scale_command_receiver(ctx, question: str) -> None:
-    expires = datetime.datetime.utcnow() + datetime.timedelta(minutes=5)
+async def agree_scale_command_receiver(bot, ctx, question: str, expires) -> None:
     author = str(ctx.user.id)
     vote_limit = 1
 
@@ -49,13 +46,13 @@ async def agree_scale_command_receiver(ctx, question: str) -> None:
     ]
 
     survey = db.create_survey(
-        "0",
-        "",
-        author,
-        question,
-        options,
-        vote_limit,
-        expires
+        message_id="0",
+        message_url="",
+        author=author,
+        question=question,
+        options=options,
+        vote_limit=vote_limit,
+        expires=expires
     )
 
-    await send_survey(ctx, survey)
+    await bot.send_survey(ctx, survey)

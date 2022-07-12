@@ -3,7 +3,6 @@ from loguru import logger
 from typing import Optional
 from peewee import fn, JOIN
 from models import Survey, Option, Vote
-from structs import OptionStruct
 
 
 def create_survey(
@@ -11,9 +10,9 @@ def create_survey(
         message_url: str,
         author: str,
         question: str,
-        options: list[OptionStruct],
-        vote_limit: Optional[int] = None,
-        expires: Optional[datetime.datetime] = None
+        options: list,
+        expires: Optional[datetime.datetime],
+        vote_limit: Optional[int] = None
         ) -> Survey:
 
     survey = Survey.create(
@@ -113,3 +112,5 @@ def update_survey_message_info(
     logger.info(res)
 
     return res
+
+
