@@ -1,5 +1,5 @@
 discord-py-interactions
-interactions-persistence
+git+https://github.com/interactions-py/persistence
 loguru
 peewee
 dateparser

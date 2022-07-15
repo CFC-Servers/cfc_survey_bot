@@ -2,10 +2,12 @@ import asyncio
 import datetime
 import interactions
 from models import Survey
+from loguru import logger
 
 
 class ExpirationUpdater(interactions.Extension):
     def __init__(self, bot):
+        logger.info("hello I have been initialized")
         self.bot = bot
         self.have_expired = {}
         bot._loop.create_task(self.update_expired())
@@ -15,10 +17,7 @@ class ExpirationUpdater(interactions.Extension):
             await asyncio.sleep(0.5)
 
             now = datetime.datetime.utcnow()
-            expired_surveys = (Survey
-                               .select()
-                               .where(Survey.expires <= now, Survey.active == True))
-
+            expired_surveys = (Survey .select() .where(Survey.expires <= now, Survey.active is True))
             for expired in expired_surveys:
                 message_url = expired.message_url
 

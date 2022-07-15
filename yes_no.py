@@ -1,9 +1,14 @@
 import db
+import interactions
 from structs import OptionStruct
 from interactions.client.enums import ButtonStyle
 
 
-async def yes_no_command_receiver(bot, ctx, question: str, expires) -> None:
+async def yes_no_command_receiver(
+        bot,
+        ctx: interactions.CommandContext,
+        question: str,
+        expires) -> None:
     author = str(ctx.user.id)
     vote_limit = 1
 

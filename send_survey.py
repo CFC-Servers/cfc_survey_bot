@@ -1,18 +1,27 @@
 import interactions
 import db
 import math
+from typing import List
 from loguru import logger
 from interactions.ext.persistence.parse import PersistentCustomID
 
-white_box = "◽"
-black_box = "◾"
-orange_diamond = "🔸"
-crown = "👑"
-chart = "📊"
-lock = "🔒"
-letters = ["🇦", "🇧", "🇨", "🇩", "🇪", "🇫", "🇬"]
-active_color = 0x00a5d7
-expired_color = 0xf38c01
+
+class Emojis:
+    white_box = "◽"
+    black_box = "◾"
+    orange_diamond = "🔸"
+    crown = "👑"
+    chart = "📊"
+    lock = "🔒"
+
+
+class Colors:
+    active = 0x00a5d7
+    expired = 0xf38c01
+
+
+letters: List[str] = ["🇦", "🇧", "🇨", "🇩", "🇪", "🇫", "🇬"]
+
 
 message_cache = {}
 msg = interactions.api.models.message.Message
@@ -45,9 +54,9 @@ def make_count_line(count, total, is_winner=False):
         x = i + 1
 
         if x <= percent:
-            out = out + (orange_diamond if is_winner else white_box)
+            out = out + (Emojis.orange_diamond if is_winner else Emojis.white_box)
         else:
-            out = out + black_box
+            out = out + Emojis.black_box
 
         if x < 10:
             out = out + " "
@@ -56,7 +65,7 @@ def make_count_line(count, total, is_winner=False):
     out = out + f" `{count} {plural}`"
 
     if is_winner:
-        out = out + f" {crown}"
+        out = out + f" {Emojis.crown}"
 
     return out
 
@@ -86,7 +95,7 @@ def make_survey_body(survey):
     counts, total = db.get_option_counts_for_survey(survey)
 
     # 0 = first
-    # FIXME: This doesn't handle ties
+    # FIXME: This doesn't handle ties or no-vote surveys
     rankings = dict(zip(sorted(counts, key=counts.get, reverse=True), range(len(options))))
 
     for option in options:
@@ -149,8 +158,8 @@ async def send_survey(bot, ctx, survey, message_url=None):
     question = survey.question
     is_active = not survey.is_expired()
 
-    title_prefix = chart if is_active else lock
-    color = active_color if is_active else expired_color
+    title_prefix = Emojis.chart if is_active else Emojis.lock
+    color = Colors.active if is_active else Colors.expired
 
     embed = interactions.api.models.message.Embed(
         title=f"**{title_prefix} {question}**",

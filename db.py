@@ -1,3 +1,5 @@
+# A collection of convenience functions to interface with the database
+
 import datetime
 from loguru import logger
 from typing import Optional
@@ -112,5 +114,3 @@ def update_survey_message_info(
     logger.info(res)
 
     return res
-
-
