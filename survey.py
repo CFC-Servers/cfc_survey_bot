@@ -17,7 +17,7 @@ class SurveyCommand(interactions.Extension):
     @interactions.extension_command(
         name="survey",
         description="Create a new Survey",
-        scope=[840097260095275028, 225975453138026497],
+        scope=[225975453138026497],
         options=[
             Option(
                 name="custom",

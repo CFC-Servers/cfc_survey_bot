@@ -12,6 +12,7 @@ bot.load(
 )
 
 
+bot.load("custom_survey")
 bot.load("survey")
 bot.load("update_expired")
 bot.load("receive_vote")
