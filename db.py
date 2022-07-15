@@ -2,7 +2,7 @@
 
 import datetime
 from loguru import logger
-from typing import Optional
+from typing import Optional, Tuple
 from peewee import fn, JOIN
 from models import Survey, Option, Vote
 
@@ -85,14 +85,14 @@ def get_survey_by_message_id(message_id: str) -> Survey:
     return Survey.select().where(Survey.message_id == message_id).first()
 
 
-def get_option_counts_for_survey(survey: Survey):
+def get_option_counts_for_survey(survey: Survey) -> Tuple[dict[int, int], int]:
     options = (Option
                .select(Option.idx, fn.COUNT(Vote.id).alias('count'))
                .join(Vote, JOIN.LEFT_OUTER)
                .where(Option.survey == survey)
                .group_by(Option.idx))
 
-    option_counts = {}
+    option_counts: dict[int, int] = {}
     total = 0
     for o in options:
         option_counts[o.idx] = o.count

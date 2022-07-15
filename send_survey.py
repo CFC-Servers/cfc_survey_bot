@@ -11,8 +11,8 @@ class Emojis:
     black_box = "◾"
     orange_diamond = "🔸"
     crown = "👑"
-    chart = "📊"
-    lock = "🔒"
+    chart = "<:chartsmaller:997400243584901221>"
+    lock = "<:locksmaller:997400285569876018>"
 
 
 class Colors:
@@ -76,15 +76,19 @@ def make_expires_line(survey):
 
     word = "Expires" if active else "Expired"
 
-    return f"**{word}**: <t:{expires}:R>"
+    return {
+        "name": f"**{word}**",
+        "value": f"<t:{expires}:R>",
+        "inline": False
+    }
 
 
 def make_option_block(option, emoji, count, total, is_expired, ranking):
-    return "\n".join([
-        f"> {emoji} **{option}**",
-        make_count_line(count, total, is_expired and ranking == 0),
-        ""
-    ])
+    return {
+        "name": f"> {emoji} **{option}**",
+        "value": make_count_line(count, total, is_expired and ranking == 0),
+        "inline": False
+    }
 
 
 def make_survey_body(survey):
@@ -115,11 +119,12 @@ def make_survey_body(survey):
             is_expired,
             rankings[option_idx]
         )
+
         out.append(option_block)
 
     out.append(make_expires_line(survey))
 
-    return "\n".join(out)
+    return out
 
 
 def make_buttons(survey, bot):
@@ -162,10 +167,16 @@ async def send_survey(bot, ctx, survey, message_url=None):
     color = Colors.active if is_active else Colors.expired
 
     embed = interactions.api.models.message.Embed(
-        title=f"**{title_prefix} {question}**",
-        color=color,
-        description=make_survey_body(survey)
+        title=f"{title_prefix} **{question}**",
+        color=color
     )
+
+    for field in make_survey_body(survey):
+        embed.add_field(
+            name=field["name"],
+            value=field["value"],
+            inline=field["inline"]
+        )
 
     components = []
 
