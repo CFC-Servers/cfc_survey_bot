@@ -7,7 +7,6 @@ from loguru import logger
 
 class ExpirationUpdater(interactions.Extension):
     def __init__(self, bot):
-        logger.info("hello I have been initialized")
         self.bot = bot
         self.have_expired = {}
         bot._loop.create_task(self.update_expired())
@@ -17,8 +16,12 @@ class ExpirationUpdater(interactions.Extension):
             await asyncio.sleep(0.5)
 
             now = datetime.datetime.utcnow()
-            expired_surveys = (Survey .select() .where(Survey.expires <= now, Survey.active is True))
+            expired_surveys = (Survey
+                               .select()
+                               .where(Survey.expires <= now, Survey.active == True))
+
             for expired in expired_surveys:
+                logger.info(f"Expiring: {expired.id}")
                 message_url = expired.message_url
 
                 if self.have_expired.get(message_url, None) is not None:
@@ -31,7 +34,7 @@ class ExpirationUpdater(interactions.Extension):
 
                 self.have_expired[message_url] = True
                 expired.active = False
-                await self.bot.send_survey(expired, expired.message_url)
+                await self.bot.send_survey(self.bot, expired, expired.message_url)
 
                 break
 

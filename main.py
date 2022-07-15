@@ -15,6 +15,5 @@ bot.load(
 bot.load("survey")
 bot.load("update_expired")
 bot.load("receive_vote")
-bot.load("test_extension")
 
 bot.start()

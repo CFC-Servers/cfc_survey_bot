@@ -8,10 +8,10 @@ class ReceiveVote(PersistenceExtension):
     def __init__(self, bot):
         self.bot = bot
         self.updates = {}
-        self.bot._loop.create_task(self.render_votes())
+        bot._loop.create_task(self.render_votes())
 
     @extension_persistent_component("receive_vote")
-    async def receive_vote(self, ctx, idx):
+    async def receive_vote(self, ctx, idx: int):
         user_id = str(ctx.user.id)
         message_id = str(ctx.message.id)
         logger.info(f"received a vote: {user_id}")
@@ -19,7 +19,7 @@ class ReceiveVote(PersistenceExtension):
         survey = db.get_survey_by_message_id(message_id)
 
         if survey.is_expired():
-            await ctx.send("That Survey is expired")
+            await ctx.send("That Survey is expired", ephemeral=True, delete_after=15)
             return
 
         message_url = survey.message_url
@@ -36,7 +36,8 @@ class ReceiveVote(PersistenceExtension):
             await asyncio.sleep(0.5)
 
             for message_url, update in self.updates.items():
-                await self.bot.send_survey(update, message_url)
+                logger.info(f"Updating: {message_url}")
+                await self.bot.send_survey(self.bot, update, message_url)
                 del self.updates[message_url]
                 break
 
