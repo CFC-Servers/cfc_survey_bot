@@ -69,7 +69,6 @@ def add_realm_to_survey():
     logger.info("Running add_realm_to_survey migration")
 
     fields = db.get_columns("survey")
-    logger.info(fields)
     fields = [f.name for f in fields if f.table == "survey"]
 
     if "realm" in fields:
