@@ -1,7 +1,7 @@
 import dateparser
 import datetime
 import interactions
-import db
+import data
 from loguru import logger
 from structs import OptionStruct
 from typing import Optional
@@ -38,7 +38,7 @@ class ReceiveCustom(PersistenceExtension):
         if expires is not None:
             expiration = dateparser.parse(expires, settings={"TIMEZONE": "UTC"})
 
-        survey = db.create_survey(
+        survey = data.create_survey(
             message_id="0",
             message_url="",
             author=author,
@@ -55,11 +55,13 @@ def make_custom_modal(bot, question, expires=None):
     modal_components = []
 
     for i in range(5):
+        is_optional = i > 1
+
         modal_components.append(interactions.TextInput(
             style=interactions.TextStyleType.SHORT,
             custom_id=f"question-option-{i+1}",
             label=f"Option {i+1}",
-            required=False,
+            required=not is_optional,
             min_length=1,
             max_length=40
         ))

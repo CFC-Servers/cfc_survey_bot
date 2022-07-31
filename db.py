@@ -1,116 +1,84 @@
-# A collection of convenience functions to interface with the database
+# Database Models, Connection, and Setup
 
 import datetime
 from loguru import logger
-from typing import Optional, Tuple
-from peewee import fn, JOIN
-from models import Survey, Option, Vote
+from peewee import Check
+from peewee import SqliteDatabase, Model
+from peewee import BooleanField, IntegerField
+from peewee import TextField, DateTimeField, ForeignKeyField
+from playhouse.migrate import *
+
+# db = SqliteDatabase("surveys.db")
+db = SqliteDatabase("surveys.db", pragmas={
+    "journal_mode": "wal",
+    "cache_size": -1 * 64000,  # 64MB
+    "foreign_keys": 1,
+    "ignore_check_constraints": 0,
+    "synchronous": 0})
 
 
-def create_survey(
-        message_id: str,
-        message_url: str,
-        author: str,
-        question: str,
-        options: list,
-        expires: Optional[datetime.datetime],
-        vote_limit: Optional[int] = None
-        ) -> Survey:
-
-    survey = Survey.create(
-            message_id=message_id,
-            message_url=message_url,
-            author=author,
-            question=question,
-            vote_limit=vote_limit,
-            expires=expires
-            )
-
-    for i, option in enumerate(options):
-        Option.create(
-                survey=survey,
-                idx=i,
-                text=option.text,
-                text_emoji_name=option.text_emoji_name,
-                button_text=option.button_text,
-                button_emoji_name=option.button_emoji_name,
-                button_emoji_id=option.button_emoji_id,
-                color=option.color
-                )
-
-    return survey
+class BaseModel(Model):
+    class Meta:
+        database = db
 
 
-def get_option_by_index(survey: Survey, option_idx: int) -> Option:
-    return Option.select().where(
-        Option.survey == survey,
-        Option.idx == option_idx
+class Survey(BaseModel):
+    message_id = TextField()
+    message_url = TextField()
+    posted = DateTimeField(default=datetime.datetime.utcnow)
+    expires = DateTimeField(default=-1)
+    author = TextField(null=False)
+    question = TextField(null=False)
+    active = BooleanField(default=True)
+    realm = TextField(default="unknown")
+    vote_limit = IntegerField(
+        constraints=[Check('vote_limit > 0')]
     )
 
+    def is_expired(self):
+        logger.info(f"self.expires: {self.expires}")
+        return self.expires <= datetime.datetime.utcnow()
 
-def cast_vote(
-        voter_id: str,
-        survey: Survey,
-        option_idx: int
-        ) -> None:
 
-    # If vote limit is 1
-    #     If they casted a vote for a different option
-    #         Remove the existing vote
-    #         Cast the new vote
-    #     If they casted a vote for the same option
-    #         Remove the existing vote
-    # If the vote limit is > 1
-    #     If they have cast a vote for the same option
-    #         Remove the existing vote
-    #     If they cast a vote for a different option
-    #         If their vote count is below the vote_limit
-    #             Cast the new vote
+class Option(BaseModel):
+    survey = ForeignKeyField(Survey, backref="options")
+    idx = IntegerField(null=False)
+    text = TextField(null=False)
+    color = IntegerField(default=1)
+    text_emoji_name = TextField(null=True)
+    button_emoji_name = TextField(null=True)
+    button_emoji_id = TextField(null=True)
+    button_text = TextField(null=True)
 
-    Vote.delete().where(
-            Vote.voter == voter_id,
-            Vote.survey == survey
-            ).execute()
 
-    Vote.create(
-        voter=voter_id,
-        survey=survey,
-        option=get_option_by_index(survey, option_idx),
-        option_idx=option_idx
+class Vote(BaseModel):
+    # TODO: Figure out how to deal with the option vs. option_idx situation
+    voter = TextField(null=False)
+    option_idx = IntegerField()
+    option = ForeignKeyField(Option, backref="votes")
+    survey = ForeignKeyField(Survey, backref="votes")
+
+
+db.connect()
+db.create_tables([Survey, Option, Vote])
+
+# Migrations
+migrator = SqliteMigrator(db)
+
+def add_realm_to_survey():
+    logger.info("Running add_realm_to_survey migration")
+
+    fields = db.get_columns("survey")
+    logger.info(fields)
+    fields = [f.name for f in fields if f.table == "survey"]
+
+    if "realm" in fields:
+        logger.info("Realms already exists, not performing migration")
+        return
+
+    realm_field = TextField(default="unknown")
+    migrate(
+        migrator.add_column("survey", "realm", realm_field),
     )
 
-
-def get_survey_by_message_id(message_id: str) -> Survey:
-    logger.info(f"Retrieving message with id: {message_id}")
-    return Survey.select().where(Survey.message_id == message_id).first()
-
-
-def get_option_counts_for_survey(survey: Survey) -> Tuple[dict[int, int], int]:
-    options = (Option
-               .select(Option.idx, fn.COUNT(Vote.id).alias('count'))
-               .join(Vote, JOIN.LEFT_OUTER)
-               .where(Option.survey == survey)
-               .group_by(Option.idx))
-
-    option_counts: dict[int, int] = {}
-    total = 0
-    for o in options:
-        option_counts[o.idx] = o.count
-        total = total + o.count
-
-    return option_counts, total
-
-
-def update_survey_message_info(
-        survey: Survey,
-        message_id: str,
-        message_url: str):
-
-    res = (Survey
-           .update(message_id=message_id, message_url=message_url)
-           .where(Survey.id == survey.id)
-           .execute())
-
-    logger.info(res)
-
-    return res
+add_realm_to_survey()

@@ -3,3 +3,4 @@ git+https://github.com/CFC-Servers/persistence@fix/fix-component-iteration
 loguru
 peewee
 dateparser
+apsw

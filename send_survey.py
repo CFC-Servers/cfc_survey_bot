@@ -1,5 +1,5 @@
 import interactions
-import db
+import data
 import math
 from typing import List
 from loguru import logger
@@ -96,7 +96,7 @@ def make_survey_body(survey):
     is_expired = not survey.active
     out = []
 
-    counts, total = db.get_option_counts_for_survey(survey)
+    counts, total = data.get_option_counts_for_survey(survey)
 
     # 0 = first
     # FIXME: This doesn't handle ties or no-vote surveys
@@ -154,12 +154,7 @@ def make_buttons(survey, bot):
     return buttons
 
 
-async def send_survey(bot, ctx, survey, message_url=None):
-    logger.info(f"bot: {str(bot)}")
-    logger.info(f"ctx: {str(ctx)}")
-    logger.info(f"survey: {str(survey)}")
-    logger.info(f"message_url: {message_url}")
-
+def build_embed(survey, bot):
     question = survey.question
     is_active = not survey.is_expired()
 
@@ -183,6 +178,17 @@ async def send_survey(bot, ctx, survey, message_url=None):
     if is_active:
         components.append(make_buttons(survey, bot))
 
+    return embed, components
+
+
+async def send_survey(bot, ctx, survey, message_url=None):
+    logger.info(f"bot: {str(bot)}")
+    logger.info(f"ctx: {str(ctx)}")
+    logger.info(f"survey: {str(survey)}")
+    logger.info(f"message_url: {message_url}")
+
+    embed, components = build_embed(survey, bot)
+
     if message_url:
         # ctx is the bot here because I'm retarded and impatient
         # if message_url is provided, this is an update
@@ -199,4 +205,4 @@ async def send_survey(bot, ctx, survey, message_url=None):
 
         message_cache[message_url] = message
 
-        db.update_survey_message_info(survey, message_id, message_url)
+        data.update_survey_message_info(survey, message_id, message_url)

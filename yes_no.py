@@ -1,4 +1,4 @@
-import db
+import data
 import interactions
 from structs import OptionStruct
 from interactions.client.enums import ButtonStyle
@@ -27,7 +27,7 @@ async def yes_no_command_receiver(
         )
     ]
 
-    survey = db.create_survey(
+    survey = data.create_survey(
         message_id="0",
         message_url="",
         author=author,

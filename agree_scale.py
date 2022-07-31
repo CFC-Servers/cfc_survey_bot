@@ -1,4 +1,4 @@
-import db
+import data
 from structs import OptionStruct
 from interactions.client.enums import ButtonStyle
 
@@ -45,7 +45,7 @@ async def agree_scale_command_receiver(bot, ctx, question: str, expires) -> None
         ),
     ]
 
-    survey = db.create_survey(
+    survey = data.create_survey(
         message_id="0",
         message_url="",
         author=author,

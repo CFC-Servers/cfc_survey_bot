@@ -1,7 +1,7 @@
 import asyncio
 import datetime
 import interactions
-from models import Survey
+from db import Survey
 from loguru import logger
 
 
