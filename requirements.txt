@@ -1,5 +1,5 @@
 discord-py-interactions
-git+https://github.com/CFC-Servers/persistence
+git+https://github.com/CFC-Servers/persistence@fix/fix-component-iteration
 loguru
 peewee
 dateparser

@@ -3,7 +3,7 @@ import datetime
 import interactions
 from loguru import logger
 from interactions import Option, OptionType
-from options import Expires, OptionCount, Question
+from options import Expires, Question
 
 from custom_survey import make_custom_modal
 from yes_no import yes_no_command_receiver
@@ -24,7 +24,7 @@ class SurveyCommand(interactions.Extension):
                 description="A custom Survey",
                 type=OptionType.SUB_COMMAND,
                 options=[
-                    OptionCount(),
+                    Question(),
                     Expires()
                 ]
             ),
@@ -63,7 +63,7 @@ class SurveyCommand(interactions.Extension):
             expiration = dateparser.parse(expires, settings={"TIMEZONE": "UTC"})
 
         if sub_command == "custom":
-            await ctx.popup(make_custom_modal(self.client, option_count, expires))
+            await ctx.popup(make_custom_modal(self.client, question, expires))
 
         elif sub_command == "yes_no":
             await yes_no_command_receiver(

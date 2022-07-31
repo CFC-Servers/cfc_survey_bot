@@ -3,17 +3,6 @@
 import interactions
 
 
-def OptionCount():
-    return interactions.Option(
-        name="option_count",
-        description="How many options your Survey will have",
-        type=interactions.OptionType.INTEGER,
-        required=True,
-        min_value=1,
-        max_value=4
-    )
-
-
 def Expires():
     return interactions.Option(
         name="expires",

@@ -17,15 +17,17 @@ class ReceiveCustom(PersistenceExtension):
     async def custom_modal_receiver(
             self,
             ctx,
-            expires,
-            question: str,
+            persisted,
             option1: Optional[str] = None,
             option2: Optional[str] = None,
             option3: Optional[str] = None,
-            option4: Optional[str] = None):
+            option4: Optional[str] = None,
+            option5: Optional[str] = None):
         logger.info("Received custom modal receiver")
 
-        options = [o for o in [option1, option2, option3, option4] if o]
+        question, expires = persisted
+
+        options = [o for o in [option1, option2, option3, option4, option5] if o]
         options = [OptionStruct(text=o) for o in options]
 
         author = str(ctx.user.id)
@@ -49,29 +51,20 @@ class ReceiveCustom(PersistenceExtension):
         await self.bot.send_survey(ctx, survey)
 
 
-def make_custom_modal(bot, option_count, expires):
-    modal_components = [
-        interactions.TextInput(
-            style=interactions.TextStyleType.SHORT,
-            custom_id="question-input",
-            label="Your Survey Question",
-            required=True,
-            min_lenth=1,
-            max_length=45
-        )
-    ]
+def make_custom_modal(bot, question, expires=None):
+    modal_components = []
 
-    for i in range(option_count):
+    for i in range(5):
         modal_components.append(interactions.TextInput(
             style=interactions.TextStyleType.SHORT,
             custom_id=f"question-option-{i+1}",
             label=f"Option {i+1}",
-            required=True,
+            required=False,
             min_length=1,
-            max_length=25
+            max_length=40
         ))
 
-    modal_id = PersistentCustomID(bot, "custom_modal", expires)
+    modal_id = PersistentCustomID(bot, "custom_modal", [question, expires])
     modal = interactions.Modal(
         title="Create a Survey",
         custom_id=str(modal_id),
