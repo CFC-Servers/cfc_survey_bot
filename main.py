@@ -8,7 +8,7 @@ bot.send_survey = types.MethodType(send_survey, bot)
 
 bot.load(
     "interactions.ext.persistence",
-    cipher_key=interactions.ext.persistence.cipher.generate_key()
+    cipher_key=os.getenv("PERSISTENCE_CIPHER_TOKEN", "")
 )
 
 

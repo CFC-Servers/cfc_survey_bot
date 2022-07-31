@@ -19,7 +19,7 @@ class ReceiveVote(PersistenceExtension):
         survey = db.get_survey_by_message_id(message_id)
 
         if survey.is_expired():
-            await ctx.send("That Survey is expired", ephemeral=True, delete_after=15)
+            await ctx.send("That Survey is expired", ephemeral=True)
             return
 
         message_url = survey.message_url
@@ -29,7 +29,7 @@ class ReceiveVote(PersistenceExtension):
 
         db.cast_vote(user_id, survey, idx)
         self.updates[message_url] = survey
-        await ctx.send()
+        await ctx.defer(edit_origin=True)
 
     async def render_votes(self):
         while True:
