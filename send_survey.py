@@ -79,6 +79,7 @@ def make_count_line(count, total, is_active=True, votes_hidden=False, is_winner=
 def make_expires_line(survey):
     expires = round(survey.expires.timestamp())
 
+    votes_hidden = survey.votes_hidden
     active = survey.active
     word = "Expires" if active else "Expired"
 
