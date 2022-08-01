@@ -88,7 +88,7 @@ def make_expires_line(survey):
     if active:
         if locked_by:
             expiration = f"Locked early by <@{locked_by}>"
-        else if votes_hidden:
+        elif votes_hidden:
             expiration = f"Votes revealed {expiration}"
 
     return {
