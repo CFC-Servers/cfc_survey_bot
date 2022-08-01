@@ -83,7 +83,13 @@ def make_expires_line(survey):
     word = "Expires" if active else "Expired"
 
     locked_by = survey.locked_by
-    expiration = f"<t:{expires}:R>" if locked_by is None else f"Locked early by <@{locked_by}>"
+    expiration = f"<t:{expires}:R>"
+
+    if active:
+        if locked_by:
+            expiration = f"Locked early by <@{locked_by}>"
+        else if votes_hidden:
+            expiration = f"Votes revealed {expiration}"
 
     return {
         "name": f"**{word}**",
