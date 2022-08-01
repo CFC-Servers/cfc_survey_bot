@@ -7,6 +7,6 @@ services:
       - DISCORD_BOT_TOKEN=$DISCORD_BOT_TOKEN
       - PERSISTENCE_CIPHER_TOKEN=$PERSISTENCE_CIPHER_TOKEN
     volumes:
-      - type: bind
-        source: ./surveys.db
-        target: /cfc-survey-bot/surveys.db
+      - ${PWD}/surveys.db:/cfc-survey-bot/surveys.db
+      - ${PWD}/surveys.db-wal:/cfc-survey-bot/surveys.db-wal
+      - ${PWD}/surveys.db-shm:/cfc-survey-bot/surveys.db-shm

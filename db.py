@@ -27,10 +27,11 @@ class Survey(BaseModel):
     message_url = TextField()
     posted = DateTimeField(default=datetime.datetime.utcnow)
     expires = DateTimeField(default=-1)
-    author = TextField(null=False)
-    question = TextField(null=False)
+    author = TextField()
+    question = TextField()
     active = BooleanField(default=True)
     realm = TextField(default="unknown")
+    locked_by = TextField(null=True)
     vote_limit = IntegerField(
         constraints=[Check('vote_limit > 0')]
     )
@@ -80,4 +81,20 @@ def add_realm_to_survey():
         migrator.add_column("survey", "realm", realm_field),
     )
 
+def add_closed_by_to_survey():
+    logger.info("Running add_closed_by_to_survey migration")
+
+    fields = db.get_columns("survey")
+    fields = [f.name for f in fields if f.table == "survey"]
+
+    if "locked_by" in fields:
+        logger.info("Locked_By already exists, not performing migration")
+        return
+
+    locked_by_field = TextField(null=True)
+    migrate(
+        migrator.add_column("survey", "locked_by", locked_by_field),
+    )
+
 add_realm_to_survey()
+add_closed_by_to_survey()

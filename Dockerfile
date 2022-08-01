@@ -1,6 +1,6 @@
 FROM python:3.10.5-slim-bullseye
 
-RUN mkdir -p /var/lib/cfc_survey_bot
+RUN mkdir -p /cfc-survey-bot
 WORKDIR /cfc-survey-bot
 
 RUN apt update && apt upgrade -y && apt install -y git && pip install --upgrade pip

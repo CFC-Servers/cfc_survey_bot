@@ -72,13 +72,16 @@ def make_count_line(count, total, is_winner=False):
 
 def make_expires_line(survey):
     expires = round(survey.expires.timestamp())
-    active = survey.active
 
+    active = survey.active
     word = "Expires" if active else "Expired"
+
+    locked_by = survey.locked_by
+    expiration = f"<t:{expires}:R>" if locked_by is None else f"Locked early by <@{locked_by}>"
 
     return {
         "name": f"**{word}**",
-        "value": f"<t:{expires}:R>",
+        "value": expiration,
         "inline": False
     }
 
@@ -122,7 +125,9 @@ def make_survey_body(survey):
 
         out.append(option_block)
 
-    out.append(make_expires_line(survey))
+    expires_line = make_expires_line(survey)
+    if expires_line:
+        out.append(expires_line)
 
     return out
 
