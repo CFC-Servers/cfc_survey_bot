@@ -25,7 +25,7 @@ class ReceiveCustom(PersistenceExtension):
             option5: Optional[str] = None):
         logger.info("Received custom modal receiver")
 
-        question, expires = persisted
+        question, expires, realm, votes_hidden = persisted
 
         options = [o for o in [option1, option2, option3, option4, option5] if o]
         options = [OptionStruct(text=o) for o in options]
@@ -45,13 +45,15 @@ class ReceiveCustom(PersistenceExtension):
             question=question,
             options=options,
             vote_limit=vote_limit,
-            expires=expiration
+            expires=expiration,
+            realm=realm,
+            votes_hidden=votes_hidden
         )
 
         await self.bot.send_survey(ctx, survey)
 
 
-def make_custom_modal(bot, question, expires=None):
+def make_custom_modal(bot, question, expires=None, realm=None, votes_hidden=False):
     modal_components = []
 
     for i in range(5):
@@ -66,7 +68,7 @@ def make_custom_modal(bot, question, expires=None):
             max_length=40
         ))
 
-    modal_id = PersistentCustomID(bot, "custom_modal", [question, expires])
+    modal_id = PersistentCustomID(bot, "custom_modal", [question, expires, realm, votes_hidden])
     modal = interactions.Modal(
         title="Create a Survey",
         custom_id=str(modal_id),

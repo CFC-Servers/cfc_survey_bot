@@ -26,8 +26,8 @@ class ReceiveVote(PersistenceExtension):
             await ctx.send("What even is that")
             return
 
-        data.cast_vote(user_id, survey, idx)
         await ctx.defer(edit_origin=True)
+        data.cast_vote(user_id, survey, idx)
 
         embed, components = build_embed(survey, self.bot)
         await ctx.edit("", embeds=[embed], components=components)

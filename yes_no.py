@@ -1,5 +1,6 @@
 import data
 import interactions
+from loguru import logger
 from structs import OptionStruct
 from interactions.client.enums import ButtonStyle
 
@@ -8,7 +9,10 @@ async def yes_no_command_receiver(
         bot,
         ctx: interactions.CommandContext,
         question: str,
-        expires) -> None:
+        expires,
+        realm: str,
+        votes_hidden: bool) -> None:
+    logger.info(realm)
     author = str(ctx.user.id)
     vote_limit = 1
 
@@ -34,7 +38,9 @@ async def yes_no_command_receiver(
         question=question,
         options=options,
         vote_limit=vote_limit,
-        expires=expires
+        expires=expires,
+        realm=realm,
+        votes_hidden=votes_hidden
     )
 
     await bot.send_survey(ctx, survey)

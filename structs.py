@@ -15,7 +15,7 @@ class OptionStruct:
             button_emoji_name: Optional[str] = None,
             button_emoji_id: Optional[str] = None,
 
-            color: Optional[int] = ButtonStyle.PRIMARY):
+            color: Optional[int] = ButtonStyle.SECONDARY):
 
         self.text = text
         self.text_emoji_name = text_emoji_name
@@ -23,3 +23,12 @@ class OptionStruct:
         self.button_emoji_name = button_emoji_name
         self.button_emoji_id = button_emoji_id
         self.color = color
+
+realm_translation = {
+    "cfc3": "CFC Build/Kill",
+    "cfcrp": "CFC DarkRP",
+    "cfcttt": "CFC TTT",
+    "discord": "Discord",
+    "meta": "Meta",
+    "web": "Website"
+}

@@ -6,7 +6,6 @@ from peewee import Check
 from peewee import SqliteDatabase, Model
 from peewee import BooleanField, IntegerField
 from peewee import TextField, DateTimeField, ForeignKeyField
-from playhouse.migrate import *
 
 # db = SqliteDatabase("surveys.db")
 db = SqliteDatabase("surveys.db", pragmas={
@@ -30,8 +29,9 @@ class Survey(BaseModel):
     author = TextField()
     question = TextField()
     active = BooleanField(default=True)
-    realm = TextField(default="unknown")
+    realm = TextField(null=True)
     locked_by = TextField(null=True)
+    votes_hidden = BooleanField(default=False)
     vote_limit = IntegerField(
         constraints=[Check('vote_limit > 0')]
     )
@@ -62,39 +62,3 @@ class Vote(BaseModel):
 
 db.connect()
 db.create_tables([Survey, Option, Vote])
-
-# Migrations
-migrator = SqliteMigrator(db)
-
-def add_realm_to_survey():
-    logger.info("Running add_realm_to_survey migration")
-
-    fields = db.get_columns("survey")
-    fields = [f.name for f in fields if f.table == "survey"]
-
-    if "realm" in fields:
-        logger.info("Realms already exists, not performing migration")
-        return
-
-    realm_field = TextField(default="unknown")
-    migrate(
-        migrator.add_column("survey", "realm", realm_field),
-    )
-
-def add_closed_by_to_survey():
-    logger.info("Running add_closed_by_to_survey migration")
-
-    fields = db.get_columns("survey")
-    fields = [f.name for f in fields if f.table == "survey"]
-
-    if "locked_by" in fields:
-        logger.info("Locked_By already exists, not performing migration")
-        return
-
-    locked_by_field = TextField(null=True)
-    migrate(
-        migrator.add_column("survey", "locked_by", locked_by_field),
-    )
-
-add_realm_to_survey()
-add_closed_by_to_survey()

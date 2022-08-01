@@ -1,6 +1,7 @@
 import interactions
 import os
 import types
+import logging
 from send_survey import send_survey
 
 bot = interactions.Client(token=os.getenv("DISCORD_BOT_TOKEN", ""))
@@ -10,6 +11,7 @@ bot.load(
     "interactions.ext.persistence",
     cipher_key=os.getenv("PERSISTENCE_CIPHER_TOKEN", "")
 )
+
 
 
 bot.load("custom_survey")

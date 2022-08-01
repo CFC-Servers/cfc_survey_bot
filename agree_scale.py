@@ -3,7 +3,7 @@ from structs import OptionStruct
 from interactions.client.enums import ButtonStyle
 
 
-async def agree_scale_command_receiver(bot, ctx, question: str, expires) -> None:
+async def agree_scale_command_receiver(bot, ctx, question: str, expires, realm: str, votes_hidden: bool) -> None:
     author = str(ctx.user.id)
     vote_limit = 1
 
@@ -52,7 +52,9 @@ async def agree_scale_command_receiver(bot, ctx, question: str, expires) -> None
         question=question,
         options=options,
         vote_limit=vote_limit,
-        expires=expires
+        expires=expires,
+        realm=realm,
+        votes_hidden=votes_hidden
     )
 
     await bot.send_survey(ctx, survey)

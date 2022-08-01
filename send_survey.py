@@ -3,6 +3,7 @@ import data
 import math
 from typing import List
 from loguru import logger
+from structs import realm_translation
 from interactions.ext.persistence.parse import PersistentCustomID
 
 
@@ -11,8 +12,8 @@ class Emojis:
     black_box = "◾"
     orange_diamond = "🔸"
     crown = "👑"
-    chart = "<:chartsmaller:997400243584901221>"
-    lock = "<:locksmaller:997400285569876018>"
+    chart = "<:chartsmaller:1003500706851999785>"
+    lock = "<:locksmaller:1003500694000648202>"
 
 
 class Colors:
@@ -40,12 +41,13 @@ async def get_discord_message(url: str, http):
     return message
 
 
-def make_count_line(count, total, is_winner=False):
+def make_count_line(count, total, is_active=True, votes_hidden=False, is_winner=False):
     out = ""
 
     percent = None
+    should_hide = is_active and votes_hidden
 
-    if total == 0:
+    if total == 0 or should_hide:
         percent = 0
     else:
         percent = math.floor((count / total) * 10)
@@ -61,10 +63,13 @@ def make_count_line(count, total, is_winner=False):
         if x < 10:
             out = out + " "
 
-    plural = "votes" if count != 1 else "vote"
-    out = out + f" `{count} {plural}`"
+    if should_hide:
+        out = out + " `? votes`"
+    else:
+        plural = "votes" if count != 1 else "vote"
+        out = out + f" `{count} {plural}`"
 
-    if is_winner:
+    if (not is_active) and is_winner:
         out = out + f" {Emojis.crown}"
 
     return out
@@ -86,17 +91,26 @@ def make_expires_line(survey):
     }
 
 
-def make_option_block(option, emoji, count, total, is_expired, ranking):
+def make_totals_line(total):
+    plural = "Votes" if total > 1 else "Vote"
+
     return {
-        "name": f"> {emoji} **{option}**",
-        "value": make_count_line(count, total, is_expired and ranking == 0),
+        "name": "**Total Votes**",
+        "value": f"`{total} {plural}`",
+        "inline": False
+    }
+
+
+def make_option_block(option, emoji, count, total, is_active, votes_hidden, is_winner):
+    return {
+        "name": f"{emoji} **{option}**",
+        "value": make_count_line(count, total, is_active, votes_hidden, is_winner),
         "inline": False
     }
 
 
 def make_survey_body(survey):
     options = survey.options
-    is_expired = not survey.active
     out = []
 
     counts, total = data.get_option_counts_for_survey(survey)
@@ -119,11 +133,15 @@ def make_survey_body(survey):
             option_emoji,
             count,
             total,
-            is_expired,
-            rankings[option_idx]
+            survey.active,
+            survey.votes_hidden,
+            rankings[option_idx] == 0
         )
 
         out.append(option_block)
+
+    total_line = make_totals_line(total)
+    out.append(total_line)
 
     expires_line = make_expires_line(survey)
     if expires_line:
@@ -171,6 +189,11 @@ def build_embed(survey, bot):
         color=color
     )
 
+    realm = survey.realm
+    if realm and realm != "unknown":
+        translated = realm_translation.get(realm, realm)
+        embed.set_footer(text=f"Subject: {translated}")
+
     for field in make_survey_body(survey):
         embed.add_field(
             name=field["name"],
@@ -187,11 +210,6 @@ def build_embed(survey, bot):
 
 
 async def send_survey(bot, ctx, survey, message_url=None):
-    logger.info(f"bot: {str(bot)}")
-    logger.info(f"ctx: {str(ctx)}")
-    logger.info(f"survey: {str(survey)}")
-    logger.info(f"message_url: {message_url}")
-
     embed, components = build_embed(survey, bot)
 
     if message_url:
