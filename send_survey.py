@@ -46,6 +46,7 @@ def make_count_line(count, total, is_active=True, votes_hidden=False, is_winner=
 
     percent = None
     should_hide = is_active and votes_hidden
+    is_winner = (not is_active) and is_winner
 
     if total == 0 or should_hide:
         percent = 0
@@ -69,7 +70,7 @@ def make_count_line(count, total, is_active=True, votes_hidden=False, is_winner=
         plural = "votes" if count != 1 else "vote"
         out = out + f" `{count} {plural}`"
 
-    if (not is_active) and is_winner:
+    if is_winner:
         out = out + f" {Emojis.crown}"
 
     return out
