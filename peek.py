@@ -47,7 +47,7 @@ class Peek(interactions.Extension):
 
         survey.votes_hidden = False
         embed, components = build_embed(survey, self.bot)
-        await ctx.send("", embeds=[success_embed], components=[components], ephemeral=True)
+        await ctx.send("", embeds=[embed], components=[components], ephemeral=True)
 
 
 def setup(bot):
