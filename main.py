@@ -19,5 +19,6 @@ bot.load("survey")
 bot.load("update_expired")
 bot.load("receive_vote")
 bot.load("manual_lock")
+bot.load("peek")
 
 bot.start()
