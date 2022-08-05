@@ -185,7 +185,7 @@ def make_buttons(survey, bot):
     return buttons
 
 
-def build_embed(survey, bot):
+def build_embed(survey, bot, interactable=True):
     question = survey.question
     is_active = not survey.is_expired()
 
@@ -211,7 +211,7 @@ def build_embed(survey, bot):
 
     components = []
 
-    if is_active:
+    if is_active and interactable:
         components.append(make_buttons(survey, bot))
 
     return embed, components

@@ -46,7 +46,7 @@ class Peek(interactions.Extension):
         logger.info(f"Result peek for {ctx.target.id}")
 
         survey.votes_hidden = False
-        embed, components = build_embed(survey, self.bot)
+        embed, components = build_embed(survey, self.bot, False)
         await ctx.send("", embeds=[embed], components=[components], ephemeral=True)
 
 
