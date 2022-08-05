@@ -13,14 +13,14 @@ class Peek(interactions.Extension):
         return not set(roles).isdisjoint(self.peekers)
 
     @interactions.extension_command(
-        name="Peek at Survey Results",
+        name="See Survey Results",
         type=interactions.ApplicationCommandType.MESSAGE,
         #scope=840097260095275028,
         scope=225975453138026497,
     )
     async def manual_lock(self, ctx):
 
-        if not self.can_lock(ctx.member.roles):
+        if not self.can_peeek(ctx.member.roles):
             logger.info(f"User tried to peek at the survey but doesn't have permission: {ctx.member.id}")
 
             err_embed = interactions.Embed(
