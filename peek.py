@@ -20,7 +20,7 @@ class Peek(interactions.Extension):
     )
     async def manual_lock(self, ctx):
 
-        if not self.can_peeek(ctx.member.roles):
+        if not self.can_peek(ctx.member.roles):
             logger.info(f"User tried to peek at the survey but doesn't have permission: {ctx.member.id}")
 
             err_embed = interactions.Embed(
