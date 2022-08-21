@@ -199,8 +199,10 @@ def build_embed(survey, bot, interactable=True):
 
     realm = survey.realm
     if realm and realm != "unknown":
-        translated = realm_translation.get(realm, realm)
-        embed.set_footer(text=f"Subject: {translated}")
+        translated = realm_translation.get(realm, None)
+
+        if translated is not None:
+            embed.set_footer(text=f"Subject: {translated}")
 
     for field in make_survey_body(survey):
         embed.add_field(

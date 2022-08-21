@@ -26,7 +26,6 @@ class SurveyCommand(interactions.Extension):
                 type=OptionType.SUB_COMMAND,
                 options=[
                     Question(),
-                    Realm(),
                     Expires(),
                     VotesHidden(),
                 ]
@@ -71,7 +70,7 @@ class SurveyCommand(interactions.Extension):
             expiration = dateparser.parse(expires, settings={"TIMEZONE": "UTC"})
 
         if sub_command == "custom":
-            await ctx.popup(make_custom_modal(self.client, question, expires, realm, votes_hidden))
+            await ctx.popup(make_custom_modal(self.client, question, expires, votes_hidden))
 
         elif sub_command == "yes_no":
             await yes_no_command_receiver(

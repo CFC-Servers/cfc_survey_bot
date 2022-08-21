@@ -24,11 +24,12 @@ class OptionStruct:
         self.button_emoji_id = button_emoji_id
         self.color = color
 
+
 realm_translation = {
     "cfc3": "CFC Build/Kill",
     "cfcrp": "CFC DarkRP",
     "cfcttt": "CFC TTT",
     "discord": "Discord",
     "meta": "Meta",
-    "web": "Website"
+    "web": "Website",
 }
