@@ -2,11 +2,14 @@ import dateparser
 import datetime
 import interactions
 import data
+import uuid
 from loguru import logger
 from structs import OptionStruct
 from typing import Optional
 from interactions.ext.persistence.parse import PersistentCustomID
 from interactions.ext.persistence import PersistenceExtension, extension_persistent_modal
+
+persisted_forms = {}
 
 
 class ReceiveCustom(PersistenceExtension):
@@ -25,7 +28,8 @@ class ReceiveCustom(PersistenceExtension):
             option5: Optional[str] = None):
         logger.info("Received custom modal receiver")
 
-        question, expires, votes_hidden = persisted
+        question, expires, votes_hidden = persisted_forms[persisted]
+        del persisted_forms[persisted]
 
         options = [o for o in [option1, option2, option3, option4, option5] if o]
         options = [OptionStruct(text=o) for o in options]
@@ -68,7 +72,10 @@ def make_custom_modal(bot, question, expires=None, votes_hidden=False):
             max_length=40
         ))
 
-    modal_id = PersistentCustomID(bot, "custom_modal", [question, expires, votes_hidden])
+    uid = str(uuid.uuid4())
+    persisted_forms[uid] = (question, expires, votes_hidden)
+
+    modal_id = PersistentCustomID(bot, "custom_modal", uid)
     modal = interactions.Modal(
         title="Create a Survey",
         custom_id=str(modal_id),
