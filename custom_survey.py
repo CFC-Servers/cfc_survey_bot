@@ -27,6 +27,8 @@ class ReceiveCustom(PersistenceExtension):
             option4: Optional[str] = None,
             option5: Optional[str] = None):
         logger.info("Received custom modal receiver")
+        logger.info(f"Looking for: {persisted}")
+        logger.info(persisted_forms)
 
         question, expires, votes_hidden = persisted_forms[persisted]
         del persisted_forms[persisted]
@@ -74,6 +76,7 @@ def make_custom_modal(bot, question, expires=None, votes_hidden=False):
 
     uid = str(uuid.uuid4())
     persisted_forms[uid] = (question, expires, votes_hidden)
+    logger.info(f"Storing: {uid} for '{question}'")
 
     modal_id = PersistentCustomID(bot, "custom_modal", uid)
     modal = interactions.Modal(
