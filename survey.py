@@ -18,7 +18,7 @@ class SurveyCommand(interactions.Extension):
         name="survey",
         description="Create a new Survey",
         #scope=[840097260095275028],
-        scope=[225975453138026497],
+        scope=[225975453138026497, 744935113175072870],
         options=[
             Option(
                 name="custom",
