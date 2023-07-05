@@ -4,7 +4,6 @@ import math
 from typing import List
 from loguru import logger
 from structs import realm_translation
-from interactions.ext.persistence.parse import PersistentCustomID
 
 
 class Emojis:
@@ -179,7 +178,7 @@ def make_buttons(survey, bot):
             style=option.color,
             emoji=emoji,
             label=option.button_text,
-            custom_id=str(PersistentCustomID(bot, "receive_vote", option_idx))
+            custom_id=f"receive_vote-${option_idx}"
         ))
 
     return buttons

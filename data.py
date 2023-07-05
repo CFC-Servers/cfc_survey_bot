@@ -1,7 +1,7 @@
 # A collection of convenience functions to interface with the database
 
 import datetime
-from interactions.api.models.misc import Snowflake
+from interactions.models.discord.snowflake import Snowflake
 from loguru import logger
 from typing import Optional, Tuple
 from peewee import fn, JOIN
