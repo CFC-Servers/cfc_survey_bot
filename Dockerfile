@@ -8,6 +8,7 @@ RUN apt update && apt upgrade -y && apt install -y git && pip install --upgrade 
 COPY requirements.txt requirements.txt
 RUN pip install --upgrade -r ./requirements.txt
 
+USER 1000
 COPY entrypoint.sh .
 COPY *.py /cfc-survey-bot/
 ENTRYPOINT ["/cfc-survey-bot/entrypoint.sh"]

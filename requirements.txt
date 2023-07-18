@@ -1,4 +1,4 @@
-discord-py-interactions
+discord-py-interactions==4.3.0
 git+https://github.com/CFC-Servers/persistence@fix/fix-component-iteration
 loguru
 peewee

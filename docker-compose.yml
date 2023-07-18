@@ -7,7 +7,7 @@ services:
       - DISCORD_BOT_TOKEN=$DISCORD_BOT_TOKEN
       - PERSISTENCE_CIPHER_TOKEN=$PERSISTENCE_CIPHER_TOKEN
     volumes:
-      - ${PWD}/surveys.db:/cfc-survey-bot/surveys.db
-      - ${PWD}/surveys.db-wal:/cfc-survey-bot/surveys.db-wal
-      - ${PWD}/surveys.db-shm:/cfc-survey-bot/surveys.db-shm
-    restart: always
+      - ./surveys.db:/cfc-survey-bot/surveys.db
+      - ./surveys.db-wal:/cfc-survey-bot/surveys.db-wal
+      - ./surveys.db-shm:/cfc-survey-bot/surveys.db-shm
+    restart: on-failure
