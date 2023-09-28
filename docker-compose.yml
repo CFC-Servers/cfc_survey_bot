@@ -2,6 +2,7 @@ version: "3.8"
 services:
   bot:
     build: .
+    image: ghcr.io/cfc-servers/cfc_survey_bot:latest
     command: python3 main.py
     environment:
       - DISCORD_BOT_TOKEN=$DISCORD_BOT_TOKEN
